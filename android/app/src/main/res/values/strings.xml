@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TaskTime</string>
+    <string name="accessibility_service_label">TaskTime Monitoring</string>
+    <string name="accessibility_service_description">TaskTime używa tej usługi do identyfikacji aplikacji i stron internetowych na pierwszym planie, aby móc je blokować zgodnie z Twoimi ustawieniami i pomagać Ci w skupieniu. Usługa ta nie zbiera żadnych Twoich prywatnych danych wpisywanych na ekranie.</string>
+</resources>

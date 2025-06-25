@@ -1,122 +1,146 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/utils/permissions_manager.dart';
+import 'package:myapp/services/background_service_handler.dart';
+import 'package:myapp/screens/dashboard_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:myapp/providers/theme_provider.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  PermissionsManager permissionsManager = PermissionsManager();
+  await permissionsManager.ensurePermissions();
+
+  await initializeBackgroundService();
+
+  // Uruchomienie aplikacji z ChangeNotifierProvider dla ThemeProvider
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    // Definicje motywów (tak jak były wcześniej)
+    const Color darkPrimaryBg = Color(0xFF121212);
+    const Color darkCardBg = Color(0xFF1E1E1E);
+    const Color darkAccentColor = Color(0xFF4CAF50);
+    const Color darkMainText = Color(0xFFE0E0E0);
+    const Color darkSecondaryText = Color(0xFFA0A0A0);
+
+    const Color lightPrimaryBg = Color(0xFFFFFFFF);
+    const Color lightCardBg = Color(0xFFF0F0F0);
+    const Color lightAccentColor = Color(0xFF00C853);
+    const Color lightMainText = Color(0xFF000000);
+    const Color lightSecondaryText = Color(0xFF505050);
+
+    ThemeData darkTheme = ThemeData(
+      brightness: Brightness.dark,
+      primaryColor: darkAccentColor,
+      scaffoldBackgroundColor: darkPrimaryBg,
+      cardColor: darkCardBg,
+      hintColor: darkAccentColor,
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: darkMainText),
+        bodyMedium: TextStyle(color: darkMainText),
+        titleMedium: TextStyle(color: darkSecondaryText),
+        headlineLarge: TextStyle(color: darkMainText, fontWeight: FontWeight.bold),
+        headlineMedium: TextStyle(color: darkMainText, fontWeight: FontWeight.bold),
+        headlineSmall: TextStyle(color: darkMainText, fontWeight: FontWeight.bold),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      colorScheme: ColorScheme.dark(
+        primary: darkAccentColor,
+        secondary: darkAccentColor,
+        surface: darkCardBg,
+        background: darkPrimaryBg,
+        onPrimary: Colors.black,
+        onSecondary: Colors.black,
+        onSurface: darkMainText,
+        onBackground: darkMainText,
+        error: Colors.redAccent,
+        onError: Colors.white,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: darkPrimaryBg,
+        elevation: 0,
+        iconTheme: IconThemeData(color: darkAccentColor),
+        titleTextStyle: TextStyle(color: darkMainText, fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: darkAccentColor,
+        foregroundColor: Colors.black,
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return darkAccentColor;
+          return darkSecondaryText;
+        }),
+        checkColor: WidgetStateProperty.all(Colors.black),
+        side: BorderSide(color: darkAccentColor, width: 2),
+      ),
     );
-  }
-}
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+    ThemeData lightTheme = ThemeData(
+      brightness: Brightness.light,
+      primaryColor: lightAccentColor,
+      scaffoldBackgroundColor: lightPrimaryBg,
+      cardColor: lightCardBg,
+      hintColor: lightAccentColor,
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: lightMainText),
+        bodyMedium: TextStyle(color: lightMainText),
+        titleMedium: TextStyle(color: lightSecondaryText),
+        headlineLarge: TextStyle(color: lightMainText, fontWeight: FontWeight.bold),
+        headlineMedium: TextStyle(color: lightMainText, fontWeight: FontWeight.bold),
+        headlineSmall: TextStyle(color: lightMainText, fontWeight: FontWeight.bold),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
+       colorScheme: ColorScheme.light(
+        primary: lightAccentColor,
+        secondary: lightAccentColor,
+        surface: lightCardBg,
+        background: lightPrimaryBg,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: lightMainText,
+        onBackground: lightMainText,
+        error: Colors.red,
+        onError: Colors.white,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      appBarTheme: const AppBarTheme(
+        backgroundColor: lightPrimaryBg,
+        elevation: 0,
+        iconTheme: IconThemeData(color: lightAccentColor),
+        titleTextStyle: TextStyle(color: lightMainText, fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: lightAccentColor,
+        foregroundColor: Colors.white,
+      ),
+       checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return lightAccentColor;
+          return lightSecondaryText;
+        }),
+        checkColor: WidgetStateProperty.all(Colors.white),
+        side: BorderSide(color: lightAccentColor, width: 2),
+      ),
+    );
+
+    // Pobierz aktualny ThemeMode od ThemeProvider
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return MaterialApp(
+      title: 'TaskTime',
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: themeProvider.themeMode, // Użyj themeMode z providera
+      home: const DashboardScreen(),
     );
   }
 }
